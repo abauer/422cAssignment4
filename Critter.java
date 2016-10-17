@@ -12,9 +12,10 @@
  */
 package assignment4;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import com.intellij.openapi.graph.util.HashMap2D;
+import com.intellij.openapi.vcs.history.VcsRevisionNumber;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /* see the PDF for descriptions of the methods and fields in this class
@@ -60,6 +61,17 @@ public abstract class Critter {
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
+	}
+
+	protected int rollFight(boolean fight){
+		return fight ? getRandomInt(energy) : 0;
+	}
+
+	protected boolean cull(){
+		energy-=Params.rest_energy_cost;
+		if(energy<=0)
+			return true;
+		return false;
 	}
 
 	public abstract void doTimeStep();
@@ -180,14 +192,80 @@ public abstract class Critter {
 	 * Clear the world of all critters, dead and alive
 	 */
 	public static void clearWorld() {
-		population = new ArrayList<Critter>();
+		population = new ArrayList<>();
 	}
 	
 	public static void worldTimeStep() {
+		population.forEach(Critter::doTimeStep);	//do time step
+
+		Set<Integer> locations = new HashSet<>();
+		HashMap<Integer,LinkedList<Critter>> crits = new HashMap<>();
+		Set<Integer> collision = new HashSet<>();
+		int w = Params.world_width;
+		int h = Params.world_height;
+		for(Critter c : population) {	//identify collisions
+			int sum = w>h ? c.x_coord+c.y_coord*w : c.y_coord+c.x_coord*h;
+			if (!crits.containsKey(sum)) crits.put(sum,new LinkedList<>());
+			crits.get(sum).add(c);
+			if(!locations.contains(sum))
+				locations.add(sum);
+			else {
+				collision.add(sum);
+			}
+		}
+		for(Integer i : collision){		//handle collisions
+			LinkedList<Critter> result = crits.get(i);
+			int origx = result.peek().x_coord; int origy = result.peek().y_coord;
+			while(!result.isEmpty()){
+				Critter A = result.poll();
+				Critter B = result.poll();
+				boolean afight = A.fight(B.toString());
+				boolean bfight = B.fight(A.toString());
+				boolean aflag = false;
+				boolean bflag = false;
+				if(A.x_coord!=origx||A.y_coord!=origx) {	//A is not in spot we cannot add A & B defaults
+					aflag = true;
+				}
+				if(B.x_coord!=origx||B.y_coord!=origx) {	//B is not in spot we cannot add B & A defaults
+					bflag = true;
+				}
+				if(A.energy<=0) {
+					population.remove(A);	//A dies so we cannot add A & B defaults
+					aflag = true;
+				}
+				if(B.energy<=0) {
+					population.remove(B);	//B dies so we cannot add B & A defaults
+					bflag = true;
+				}
+				if(!bflag && aflag) {	//A moved or Died and B is still there
+					result.addFirst(B);
+					continue;
+				}
+				if(!aflag && bflag) {	//B moved or Died and B is still there
+					result.addFirst(A);
+					continue;
+				}
+				if(aflag&&bflag){	//both A and B moved or Died
+					continue;
+				}
+				int aroll = A.rollFight(afight);
+				int broll = B.rollFight(bfight);
+				if(aroll>=broll){	//A wins tiebreaker
+					population.remove(B);
+					A.energy+=B.energy/2;
+					result.addFirst(A);
+				}
+			}
+		}
+
+		babies.stream().forEach(population::add);	//handle reproduce
+
 		Iterator<Critter> it = population.iterator();
 		while(it.hasNext()){
 			Critter c = it.next();
-			c.doTimeStep();
+			if(c.cull()){
+				it.remove();
+			}
 		}
 	}
 	
