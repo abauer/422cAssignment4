@@ -55,14 +55,14 @@ public abstract class Critter {
 		// right
 		if (direction == 7 || direction == 0 || direction == 1)
 			x_coord = (x_coord+distance)%Params.world_width;
+		// left
+		else if (direction == 3 || direction == 4 || direction == 5)
+			x_coord = (x_coord-distance)%Params.world_width;
 		// up
 		if (direction == 1 || direction == 2 || direction == 3)
-			y_coord = (y_coord+distance)%Params.world_height;
+			y_coord = (y_coord-distance)%Params.world_height;
 		// down
-		if (direction == 3 || direction == 4 || direction == 5)
-			x_coord = (x_coord+distance)%Params.world_width;
-		// left
-		if (direction == 1 || direction == 2 || direction == 3)
+		else if (direction == 5 || direction == 6 || direction == 7)
 			y_coord = (y_coord+distance)%Params.world_height;
 	}
 
@@ -80,6 +80,7 @@ public abstract class Critter {
 		if (energy < Params.min_reproduce_energy) return;
 		offspring.energy = energy/2; // round down
 		energy -= energy/2; // round up
+		// spawn offspring adjacent to parent
 		offspring.x_coord = x_coord;
 		offspring.y_coord = y_coord;
 		offspring.moveInDirection(direction, 1);
@@ -88,6 +89,14 @@ public abstract class Critter {
 
 	protected int rollFight(boolean fight){
 		return fight ? getRandomInt(energy) : 0;
+	}
+
+	private int rollFight(String opponent) {
+		return rollFight(fight(opponent));
+	}
+
+	private int rollFight(Critter opponent) {
+		return rollFight(fight(opponent.toString()));
 	}
 
 	protected boolean cull(){
@@ -111,7 +120,7 @@ public abstract class Critter {
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
 		try {
 			population.add((Critter)Class.forName(critter_class_name).newInstance());
-		} catch(Exception e){
+		} catch(Exception e) {
 			throw new InvalidCritterException("Could not find Critter of type "+critter_class_name);
 		}
 	}
@@ -123,14 +132,12 @@ public abstract class Critter {
 	 * @throws InvalidCritterException
 	 */
 	public static List<Critter> getInstances(String critter_class_name) throws InvalidCritterException {
-		List<Critter> result;
 		try {
 			Class c = Class.forName(critter_class_name);
-			result = population.stream().filter(c::isInstance).collect(Collectors.toList());
-		} catch(Exception e){
+			return population.stream().filter(c::isInstance).collect(Collectors.toList());
+		} catch(Exception e) {
 			throw new InvalidCritterException("Could not find Critter of type "+critter_class_name);
 		}
-		return result;
 	}
 	
 	/**
@@ -251,7 +258,7 @@ public abstract class Critter {
 				collisions.add(hash);
 		}
 		// handle collisions
-		for(Integer hash : collisions){
+		for (Integer hash : collisions){
 			LinkedList<Critter> result = crits.get(hash);
 			int origx = unhashX(hash);
 			int origy = unhashY(hash);
@@ -270,8 +277,8 @@ public abstract class Critter {
 					result.addFirst(A);
 					continue;
 				}
-				int aRoll = A.rollFight(A.fight(B.toString()));
-				int bRoll = B.rollFight(B.fight(A.toString()));
+				int aRoll = A.rollFight(B);
+				int bRoll = B.rollFight(A);
 				if (aRoll >= bRoll) {	//A wins tiebreaker
 					A.energy += B.energy/2;
 					population.remove(B);
