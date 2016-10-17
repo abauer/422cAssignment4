@@ -91,7 +91,7 @@ public abstract class Critter {
 	}
 
 	private int rollFight(boolean fight){
-		return fight ? getRandomInt(energy) : 0;
+		return fight ? getRandomInt(energy+1) : 0;
 	}
 
 	private boolean cull(){
@@ -261,6 +261,13 @@ public abstract class Critter {
 		return (w>h) ? hash/w : hash%h;
 	}
 
+	private static void updateHash(Critter c, HashMap<Integer,LinkedList<Critter>> hash){
+		int aHash = hashCoords(c.x_coord, c.y_coord);
+		if (!hash.containsKey(aHash))
+			hash.put(aHash,new LinkedList<>());
+		hash.get(aHash).add(c);
+	}
+
 	public static void worldTimeStep() {
 		// do time step
 		population.forEach(c -> {
@@ -273,6 +280,8 @@ public abstract class Critter {
 		HashMap<Integer,LinkedList<Critter>> crits = new HashMap<>();
 		Set<Integer> collisions = new HashSet<>();
 		for(Critter c : population) {	//identify collisions
+			if(c.energy<=0) //Critter is dead, ignore it
+				continue;
 			int hash = hashCoords(c.x_coord, c.y_coord);
 			// create list if necessary, then add critter
 			if (!crits.containsKey(hash))
@@ -295,35 +304,56 @@ public abstract class Critter {
 				boolean aFlag = A.fight(B.toString());	//give critter option to move
 				boolean bFlag = B.fight(A.toString());
 				// check if either critter moved or died
-				boolean aForfeit = A.x_coord!=origx || A.y_coord!=origy || A.energy <= 0;
-				boolean bForfeit = B.x_coord!=origx || B.y_coord!=origy || B.energy <= 0;
-				if (aForfeit && bForfeit) {	//both A and B moved or died
+				boolean aMove = A.x_coord!=origx || A.y_coord!=origy;
+				boolean aDie = A.energy <= 0;
+				boolean bMove = B.x_coord!=origx || B.y_coord!=origy;
+				boolean bDie = B.energy <= 0;
+				//determine if move was valid
+				if (aMove && crits.containsKey(hashCoords(A.x_coord,A.y_coord))){	//if space is already occupied, move back to conflict space
+					A.x_coord = origx;
+					A.y_coord = origy;
+					aMove = !aMove;
+				}
+				if (bMove && crits.containsKey(hashCoords(B.x_coord,B.y_coord))){	//if space is already occupied, move back to conflict space
+					B.x_coord = origx;
+					B.y_coord = origy;
+					bMove = !bMove;
+				}
+				// handle moves or deaths
+				if ((aMove||aDie) && (bMove||bDie)) {	//both A and B moved or died
+					if(!aDie){
+						updateHash(A,crits);
+					}
+					if(!bDie){
+						updateHash(B,crits);
+					}
 					continue;
-				} else if (aForfeit) {	//A moved or died and B is still there
+				} else if (aMove || aDie) {	//A moved or died and B is still there
 					result.addFirst(B);
+					if(!aDie){
+						updateHash(A,crits);
+					}
 					continue;
-				} else if (bForfeit) {	//B moved or died and A is still there
+				} else if (bMove || bDie) {	//B moved or died and A is still there
 					result.addFirst(A);
+					if(!bDie){
+						updateHash(B,crits);
+					}
 					continue;
 				}
 				int aRoll = A.rollFight(aFlag);		//if we are still fighting, roll
 				int bRoll = B.rollFight(bFlag);
 				if (aRoll >= bRoll) {	//A wins tiebreaker
 					A.energy += B.energy/2;
-					population.remove(B);
 					B.energy=0;
 					result.addFirst(A);
 				} else {
 					B.energy += A.energy/2;
-					population.remove(A);
 					A.energy=0;
 					result.addFirst(B);
 				}
 			}
 		}
-		// handle reproduce
-		babies.forEach(population::add);
-		babies = new ArrayList<>();
 		// remove dead stuff
 		Iterator<Critter> it = population.iterator();
 		while (it.hasNext())
@@ -337,6 +367,9 @@ public abstract class Critter {
 				e.printStackTrace();
 			}
 		}
+		// handle reproduce
+		population.addAll(babies);
+		babies.clear();
 	}
 	
 	public static void displayWorld() {
