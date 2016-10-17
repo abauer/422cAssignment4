@@ -78,8 +78,8 @@ public abstract class Critter {
 	
 	protected final void reproduce(Critter offspring, int direction) {
 		if (energy < Params.min_reproduce_energy) return;
-		offspring.energy = energy/2;
-		energy -= energy/2;
+		offspring.energy = energy/2; // round down
+		energy -= energy/2; // round up
 		offspring.x_coord = x_coord;
 		offspring.y_coord = y_coord;
 		offspring.moveInDirection(direction, 1);
@@ -255,7 +255,7 @@ public abstract class Critter {
 			LinkedList<Critter> result = crits.get(hash);
 			int origx = unhashX(hash);
 			int origy = unhashY(hash);
-			while (result.size() <= 1) {
+			while (result.size() > 1) {
 				Critter A = result.poll();
 				Critter B = result.poll();
 				// check if either critter moved or died
