@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 
 public abstract class Critter {
 	private static String myPackage;
-	private	static List<Critter> population = new ArrayList<Critter>();
-	private static List<Critter> babies = new ArrayList<Critter>();
+	private	static List<Critter> population = new ArrayList<>();
+	private static List<Critter> babies = new ArrayList<>();
 
 	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
 	static {
@@ -51,7 +51,10 @@ public abstract class Critter {
 	private int x_coord;
 	private int y_coord;
 
+	private boolean hasMoved = false;
+
 	private void moveInDirection(int direction, int distance) {
+		if (hasMoved) return;
 		// right
 		if (direction == 7 || direction == 0 || direction == 1)
 			x_coord = (x_coord+distance)%Params.world_width;
@@ -237,7 +240,12 @@ public abstract class Critter {
 	}
 
 	public static void worldTimeStep() {
-		population.forEach(Critter::doTimeStep);	//do time step
+		// do time step
+		population.forEach(c -> {
+					c.hasMoved = false;
+					c.doTimeStep();
+				}
+		);
 		// pre-process locations
 		Set<Integer> locations = new HashSet<>();
 		HashMap<Integer,LinkedList<Critter>> crits = new HashMap<>();
