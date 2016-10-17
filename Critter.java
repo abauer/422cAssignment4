@@ -12,8 +12,6 @@
  */
 package assignment4;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
