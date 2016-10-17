@@ -87,12 +87,8 @@ public abstract class Critter {
 		babies.add(offspring);
 	}
 
-	protected int rollFight(boolean fight){
+	private int rollFight(boolean fight){
 		return fight ? getRandomInt(energy) : 0;
-	}
-
-	private int rollFight(Critter opponent) {
-		return rollFight(fight(opponent.toString()));
 	}
 
 	private boolean cull(){
@@ -115,7 +111,11 @@ public abstract class Critter {
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
 		try {
-			population.add((Critter)Class.forName(critter_class_name).newInstance());
+			Critter c = (Critter)Class.forName(critter_class_name).newInstance();
+			c.energy = Params.start_energy;
+			c.x_coord = getRandomInt(Params.world_width);
+			c.y_coord = getRandomInt(Params.world_height);
+			population.add(c);
 		} catch(Exception e) {
 			throw new InvalidCritterException("Could not find Critter of type "+critter_class_name);
 		}
@@ -217,6 +217,7 @@ public abstract class Critter {
 	 */
 	public static void clearWorld() {
 		population = new ArrayList<>();
+		babies = new ArrayList<>();
 	}
 
 	private static int hashCoords(int x, int y) {
@@ -237,7 +238,7 @@ public abstract class Critter {
 
 	public static void worldTimeStep() {
 		population.forEach(Critter::doTimeStep);	//do time step
-		// pre-process locaations
+		// pre-process locations
 		Set<Integer> locations = new HashSet<>();
 		HashMap<Integer,LinkedList<Critter>> crits = new HashMap<>();
 		Set<Integer> collisions = new HashSet<>();
@@ -261,6 +262,8 @@ public abstract class Critter {
 			while (result.size() > 1) {
 				Critter A = result.poll();
 				Critter B = result.poll();
+				boolean aFlag = A.fight(B.toString());	//give critter option to move
+				boolean bFlag = B.fight(A.toString());
 				// check if either critter moved or died
 				boolean aForfeit = A.x_coord!=origx || A.y_coord!=origy || A.energy <= 0;
 				boolean bForfeit = B.x_coord!=origx || B.y_coord!=origy || B.energy <= 0;
@@ -273,15 +276,17 @@ public abstract class Critter {
 					result.addFirst(A);
 					continue;
 				}
-				int aRoll = A.rollFight(B);
-				int bRoll = B.rollFight(A);
+				int aRoll = A.rollFight(aFlag);		//if we are still fighting, roll
+				int bRoll = B.rollFight(bFlag);
 				if (aRoll >= bRoll) {	//A wins tiebreaker
 					A.energy += B.energy/2;
 					population.remove(B);
+					B.energy=0;
 					result.addFirst(A);
 				} else {
 					B.energy += A.energy/2;
 					population.remove(A);
+					A.energy=0;
 					result.addFirst(B);
 				}
 			}
