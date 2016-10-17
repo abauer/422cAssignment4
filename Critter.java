@@ -51,7 +51,7 @@ public abstract class Critter {
 	private int x_coord;
 	private int y_coord;
 
-	private final void moveInDirection(int direction, int distance) {
+	private void moveInDirection(int direction, int distance) {
 		// right
 		if (direction == 7 || direction == 0 || direction == 1)
 			x_coord = (x_coord+distance)%Params.world_width;
@@ -91,15 +91,11 @@ public abstract class Critter {
 		return fight ? getRandomInt(energy) : 0;
 	}
 
-	private int rollFight(String opponent) {
-		return rollFight(fight(opponent));
-	}
-
 	private int rollFight(Critter opponent) {
 		return rollFight(fight(opponent.toString()));
 	}
 
-	protected boolean cull(){
+	private boolean cull(){
 		energy -= Params.rest_energy_cost;
 		return energy <= 0;
 	}
