@@ -12,11 +12,13 @@
  */
 package assignment4;
 
+
 import com.intellij.openapi.graph.util.HashMap2D;
 import com.intellij.openapi.vcs.history.VcsRevisionNumber;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
 
 /* see the PDF for descriptions of the methods and fields in this class
  * you may add fields, methods or inner classes to Critter ONLY if you make your additions private
@@ -52,15 +54,40 @@ public abstract class Critter {
 	
 	private int x_coord;
 	private int y_coord;
-	
+
+	private final void moveInDirection(int direction, int distance) {
+		// right
+		if (direction == 7 || direction == 0 || direction == 1)
+			x_coord = (x_coord+distance)%Params.world_width;
+		// up
+		if (direction == 1 || direction == 2 || direction == 3)
+			y_coord = (y_coord+distance)%Params.world_height;
+		// down
+		if (direction == 3 || direction == 4 || direction == 5)
+			x_coord = (x_coord+distance)%Params.world_width;
+		// left
+		if (direction == 1 || direction == 2 || direction == 3)
+			y_coord = (y_coord+distance)%Params.world_height;
+	}
+
 	protected final void walk(int direction) {
+		energy -= Params.walk_energy_cost;
+		moveInDirection(direction, 1);
 	}
 	
 	protected final void run(int direction) {
-		
+		energy -= Params.run_energy_cost;
+		moveInDirection(direction, 2);
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
+		if (energy < Params.min_reproduce_energy) return;
+		offspring.energy = energy/2;
+		energy -= energy/2;
+		offspring.x_coord = x_coord;
+		offspring.y_coord = y_coord;
+		offspring.moveInDirection(direction, 1);
+		babies.add(offspring);
 	}
 
 	protected int rollFight(boolean fight){
@@ -75,7 +102,7 @@ public abstract class Critter {
 	}
 
 	public abstract void doTimeStep();
-	public abstract boolean fight(String oponent);
+	public abstract boolean fight(String opponent);
 	
 	/**
 	 * create and initialize a Critter subclass.
@@ -125,7 +152,7 @@ public abstract class Critter {
 			if (old_count == null) {
 				critter_count.put(crit_string,  1);
 			} else {
-				critter_count.put(crit_string, old_count.intValue() + 1);
+				critter_count.put(crit_string, old_count + 1);
 			}
 		}
 		String prefix = "";
@@ -269,5 +296,11 @@ public abstract class Critter {
 		}
 	}
 	
-	public static void displayWorld() {}
+	public static void displayWorld() {
+		String border = "+"
+				+ Collections.nCopies(Params.world_width,"-").stream().collect(Collectors.joining())
+				+ "+";
+		System.out.println(border);
+		System.out.println(border);
+	}
 }
