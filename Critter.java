@@ -91,10 +91,8 @@ public abstract class Critter {
 	}
 
 	protected boolean cull(){
-		energy-=Params.rest_energy_cost;
-		if(energy<=0)
-			return true;
-		return false;
+		energy -= Params.rest_energy_cost;
+		return energy <= 0;
 	}
 
 	public abstract void doTimeStep();
@@ -257,24 +255,13 @@ public abstract class Critter {
 			LinkedList<Critter> result = crits.get(hash);
 			int origx = unhashX(hash);
 			int origy = unhashY(hash);
-			while(result.size() <= 1) {
+			while (result.size() <= 1) {
 				Critter A = result.poll();
 				Critter B = result.poll();
-				boolean aForfeit = false;
-				boolean bForfeit = false;
-				if (A.x_coord!=origx || A.y_coord!=origy)	//A is not in spot we cannot add A & B defaults
-					aForfeit = true;
-				if (B.x_coord!=origx || B.y_coord!=origy)	//B is not in spot we cannot add B & A defaults
-					bForfeit = true;
-				if(A.energy<=0) {
-					population.remove(A);	//A dies so we cannot add A & B defaults
-					aForfeit = true;
-				}
-				if(B.energy<=0) {
-					population.remove(B);	//B dies so we cannot add B & A defaults
-					bForfeit = true;
-				}
-				if(aForfeit && bForfeit){	//both A and B moved or died
+				// check if either critter moved or died
+				boolean aForfeit = A.x_coord!=origx || A.y_coord!=origy || A.energy <= 0;
+				boolean bForfeit = B.x_coord!=origx || B.y_coord!=origy || B.energy <= 0;
+				if (aForfeit && bForfeit) {	//both A and B moved or died
 					continue;
 				} else if (aForfeit) {	//A moved or died and B is still there
 					result.addFirst(B);
@@ -285,38 +272,43 @@ public abstract class Critter {
 				}
 				int aRoll = A.rollFight(A.fight(B.toString()));
 				int bRoll = B.rollFight(B.fight(A.toString()));
-				if(aRoll>=bRoll){	//A wins tiebreaker
+				if (aRoll >= bRoll) {	//A wins tiebreaker
+					A.energy += B.energy/2;
 					population.remove(B);
-					A.energy+=B.energy/2;
 					result.addFirst(A);
+				} else {
+					B.energy += A.energy/2;
+					population.remove(A);
+					result.addFirst(B);
 				}
 			}
 		}
 		// handle reproduce
 		babies.forEach(population::add);
+		babies = new ArrayList<>();
 		// remove dead stuff
 		Iterator<Critter> it = population.iterator();
-		while(it.hasNext()){
-			Critter c = it.next();
-			if(c.cull()){
+		while (it.hasNext())
+			if (it.next().cull()) // removes rest cost
 				it.remove();
-			}
-		}
 	}
 	
 	public static void displayWorld() {
+		// create +---+
 		String border = "+"
 				+ Collections.nCopies(Params.world_width,"-").stream().collect(Collectors.joining())
 				+ "+";
+		// upper border
 		System.out.println(border);
+		// pre-process all critters for simple lookups
 		HashMap<Integer,String> critterIcons = new HashMap<>();
-		for (Critter c : population) {
+		for (Critter c : population)
 			critterIcons.put(hashCoords(c.x_coord, c.y_coord), c.toString());
-		}
-		for (int r=0; r<Params.world_height; r++) {
+		// iterate over all locations
+		for (int r=0; r<Params.world_height; r++) { //"y"
 			System.out.print("|");
-			for (int c=0; c<Params.world_width; c++) {
-				int hash = hashCoords(c,r); // purposely backwards
+			for (int c=0; c<Params.world_width; c++) { //"x"
+				int hash = hashCoords(c,r); // purposely "backwards"
 				if (critterIcons.containsKey(hash)) {
 					System.out.print(critterIcons.get(hash));
 				} else {
@@ -325,6 +317,7 @@ public abstract class Critter {
 			}
 			System.out.print("|\n");
 		}
+		// lower border
 		System.out.println(border);
 	}
 }
