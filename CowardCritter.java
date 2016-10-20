@@ -1,7 +1,21 @@
+/* CRITTERS CowardCritter.java
+ * EE422C Project 4 submission by
+ * Anthony Bauer
+ * amb6869
+ * 16480
+ * Grant Uy
+ * gau84
+ * 61480
+ * Slip days used: <0>
+ * Fall 2016
+ */
+
 package assignment4;
 
-/*
- * Example critter
+/**
+ * CowardCritter
+ * The CowardCritter will always move foward
+ * Upon entering a fight the CowardCritter will preserve half its energy in the form of an offspring
  */
 public class CowardCritter extends Critter {
 
@@ -21,7 +35,6 @@ public class CowardCritter extends Critter {
 
     @Override
     public void doTimeStep() {
-		/* take one step forward */
         walk(dir);
         if (getEnergy() > Params.start_energy+1) {
             reproduce(new CowardCritter(), Critter.getRandomInt(8));
