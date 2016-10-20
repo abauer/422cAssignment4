@@ -84,6 +84,11 @@ public class Main {
 
     }
 
+    /**
+     * Parses and runs an input command.
+     * @param input the trimmed raw input
+     * @return true if the command was a valid command (even if its parameters were invalid)
+     */
     private static boolean runCommand(String input) {
         String[] tokens = input.split("\\s+");
         try {
