@@ -6,7 +6,7 @@ package assignment4;
 public class CowardCritter extends Critter {
 
     @Override
-    public String toString() { return "\u00A9"; }
+    public String toString() { return "&"; }
 
     private int dir;
 
