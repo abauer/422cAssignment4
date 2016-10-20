@@ -91,7 +91,7 @@ public abstract class Critter {
 	}
 
 	private int rollFight(boolean fight){
-		return fight ? getRandomInt(energy) : 0;
+		return fight ? getRandomInt(energy+1) : 0;
 	}
 
 	private boolean cull(){
@@ -102,6 +102,28 @@ public abstract class Critter {
 	public abstract void doTimeStep();
 	public abstract boolean fight(String opponent);
 	
+	/**
+	 * create and initialize a Critter subclass.
+	 * critter_class_name must be the unqualified name of a concrete subclass of Critter, if not,
+	 * an InvalidCritterException must be thrown.
+	 * (Java weirdness: Exception throwing does not work properly if the parameter has lower-case instead of
+	 * upper. For example, if craig is supplied instead of Craig, an error is thrown instead of
+	 * an Exception.)
+	 * @param critter_class_name
+	 * @throws InvalidCritterException
+	 */
+	public static Critter makeNewCritter(String critter_class_name) throws InvalidCritterException {
+		try {
+			Critter c = (Critter)Class.forName(critter_class_name).newInstance();
+			c.energy = Params.start_energy;
+			c.x_coord = getRandomInt(Params.world_width);
+			c.y_coord = getRandomInt(Params.world_height);
+			return c;
+		} catch(Exception e) {
+			throw new InvalidCritterException("Could not find Critter of type "+critter_class_name);
+		}
+	}
+
 	/**
 	 * create and initialize a Critter subclass.
 	 * critter_class_name must be the unqualified name of a concrete subclass of Critter, if not,
@@ -239,6 +261,13 @@ public abstract class Critter {
 		return (w>h) ? hash/w : hash%h;
 	}
 
+	private static void updateHash(Critter c, HashMap<Integer,LinkedList<Critter>> hash){
+		int aHash = hashCoords(c.x_coord, c.y_coord);
+		if (!hash.containsKey(aHash))
+			hash.put(aHash,new LinkedList<>());
+		hash.get(aHash).add(c);
+	}
+
 	public static void worldTimeStep() {
 		// do time step
 		population.forEach(c -> {
@@ -250,6 +279,8 @@ public abstract class Critter {
 		HashMap<Integer,LinkedList<Critter>> crits = new HashMap<>();
 		Set<Integer> collisions = new HashSet<>();
 		for(Critter c : population) {	//identify collisions
+			if(c.energy<=0) //Critter is dead, ignore it
+				continue;
 			int hash = hashCoords(c.x_coord, c.y_coord);
 			// create list if necessary, then add critter
 			if (!crits.containsKey(hash))
@@ -272,40 +303,72 @@ public abstract class Critter {
 				boolean aFlag = A.fight(B.toString());	//give critter option to move
 				boolean bFlag = B.fight(A.toString());
 				// check if either critter moved or died
-				boolean aForfeit = A.x_coord!=origx || A.y_coord!=origy || A.energy <= 0;
-				boolean bForfeit = B.x_coord!=origx || B.y_coord!=origy || B.energy <= 0;
-				if (aForfeit && bForfeit) {	//both A and B moved or died
+				boolean aMove = A.x_coord!=origx || A.y_coord!=origy;
+				boolean aDie = A.energy <= 0;
+				boolean bMove = B.x_coord!=origx || B.y_coord!=origy;
+				boolean bDie = B.energy <= 0;
+				//determine if move was valid
+				if (aMove && crits.containsKey(hashCoords(A.x_coord,A.y_coord))){	//if space is already occupied, move back to conflict space
+					A.x_coord = origx;
+					A.y_coord = origy;
+					aMove = !aMove;
+				}
+				if (bMove && crits.containsKey(hashCoords(B.x_coord,B.y_coord))){	//if space is already occupied, move back to conflict space
+					B.x_coord = origx;
+					B.y_coord = origy;
+					bMove = !bMove;
+				}
+				// handle moves or deaths
+				if ((aMove||aDie) && (bMove||bDie)) {	//both A and B moved or died
+					if(!aDie){
+						updateHash(A,crits);
+					}
+					if(!bDie){
+						updateHash(B,crits);
+					}
 					continue;
-				} else if (aForfeit) {	//A moved or died and B is still there
+				} else if (aMove || aDie) {	//A moved or died and B is still there
 					result.addFirst(B);
+					if(!aDie){
+						updateHash(A,crits);
+					}
 					continue;
-				} else if (bForfeit) {	//B moved or died and A is still there
+				} else if (bMove || bDie) {	//B moved or died and A is still there
 					result.addFirst(A);
+					if(!bDie){
+						updateHash(B,crits);
+					}
 					continue;
 				}
 				int aRoll = A.rollFight(aFlag);		//if we are still fighting, roll
 				int bRoll = B.rollFight(bFlag);
 				if (aRoll >= bRoll) {	//A wins tiebreaker
 					A.energy += B.energy/2;
-					population.remove(B);
 					B.energy=0;
 					result.addFirst(A);
 				} else {
 					B.energy += A.energy/2;
-					population.remove(A);
 					A.energy=0;
 					result.addFirst(B);
 				}
 			}
 		}
-		// handle reproduce
-		babies.forEach(population::add);
-		babies = new ArrayList<>();
 		// remove dead stuff
 		Iterator<Critter> it = population.iterator();
 		while (it.hasNext())
 			if (it.next().cull()) // removes rest cost
 				it.remove();
+		// add new Algae
+		for(int i = 0; i<Params.refresh_algae_count; i++) {
+			try{
+				makeCritter("Algae");
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+		// handle reproduce
+		population.addAll(babies);
+		babies.clear();
 	}
 	
 	public static void displayWorld() {
