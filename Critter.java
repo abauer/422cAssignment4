@@ -15,13 +15,6 @@ package assignment4;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
-/* see the PDF for descriptions of the methods and fields in this class
- * you may add fields, methods or inner classes to Critter ONLY if you make your additions private
- * no new public, protected or default-package code or data can be added to Critter
- */
-
-
 public abstract class Critter {
 	private static String myPackage;
 	private	static List<Critter> population = new ArrayList<>();
@@ -33,16 +26,29 @@ public abstract class Critter {
 	}
 	
 	private static java.util.Random rand = new java.util.Random();
+
+    /**
+     * Gets a random number from a (possibly) seeded generator.
+     * @param max the exclusive upper bound
+     * @return a random number in the range [0,max)
+     */
 	public static int getRandomInt(int max) {
 		return rand.nextInt(max);
 	}
-	
+
+    /**
+     * Resets the random number generator, seeding it with a given value.
+     * @param new_seed the new seed value
+     */
 	public static void setSeed(long new_seed) {
 		rand = new java.util.Random(new_seed);
 	}
 	
-	
-	/* a one-character long string that visually depicts your critter in the ASCII interface */
+
+    /**
+     * Gets the string representation of a Critter.
+     * @return a one-character long string that visually depicts your critter in the ASCII interface
+     */
 	public String toString() { return ""; }
 	
 	private int energy = 0;
@@ -53,8 +59,15 @@ public abstract class Critter {
 
 	private boolean hasMoved = false;
 
+    /**
+     * Internal method for moving a Critter a given number of tiles in a given direction
+     * Only allows one movement per time step
+     * @param direction integer in range [0,7] corresponding to a direction
+     * @param distance number of squares to travel
+     */
 	private void moveInDirection(int direction, int distance) {
 		if (hasMoved) return;
+        hasMoved = true;
 		// right
 		if (direction == 7 || direction == 0 || direction == 1)
 			x_coord = (x_coord+distance)%Params.world_width;
@@ -69,16 +82,29 @@ public abstract class Critter {
 			y_coord = (y_coord+distance)%Params.world_height;
 	}
 
+    /**
+     * Moves a Critter one tile in a given direction (at an energy cost)
+     * @param direction integer in range [0,7] corresponding to a direction
+     */
 	protected final void walk(int direction) {
 		energy -= Params.walk_energy_cost;
 		moveInDirection(direction, 1);
 	}
-	
+
+    /**
+     * Moves a Critter two tiles in a given direction (at an energy cost)
+     * @param direction integer in range [0,7] corresponding to a direction
+     */
 	protected final void run(int direction) {
 		energy -= Params.run_energy_cost;
 		moveInDirection(direction, 2);
 	}
-	
+
+    /**
+     * Initializes a new Critter one tile away from this Critter in a given direction
+     * @param offspring newly-created Critter to initialize
+     * @param direction integer in range [0,7] corresponding to a direction
+     */
 	protected final void reproduce(Critter offspring, int direction) {
 		if (energy < Params.min_reproduce_energy) return;
 		offspring.energy = energy/2; // round down
@@ -90,16 +116,16 @@ public abstract class Critter {
 		babies.add(offspring);
 	}
 
-	private int rollFight(boolean fight){
-		return fight ? getRandomInt(energy+1) : 0;
-	}
-
-	private boolean cull(){
-		energy -= Params.rest_energy_cost;
-		return energy <= 0;
-	}
-
+    /**
+     * Abstract method for Critters' custom behavior during each world time step
+     */
 	public abstract void doTimeStep();
+
+    /**
+     * Checks whether a Critter wants to fight, giving it an opportunity to flee
+     * @param opponent string representation of the opposing Critter
+     * @return whether or not the Critter wants to fight
+     */
 	public abstract boolean fight(String opponent);
 	
 	/**
@@ -281,46 +307,44 @@ public abstract class Critter {
 				boolean aFlag = A.fight(B.toString());	//give critter option to move
 				boolean bFlag = B.fight(A.toString());
 				// check if either critter moved or died
-				boolean aMove = A.x_coord!=origx || A.y_coord!=origy;
-				boolean aDie = A.energy <= 0;
-				boolean bMove = B.x_coord!=origx || B.y_coord!=origy;
-				boolean bDie = B.energy <= 0;
+				boolean aMoved = A.x_coord!=origx || A.y_coord!=origy;
+				boolean aDied = A.energy <= 0;
+				boolean bMoved = B.x_coord!=origx || B.y_coord!=origy;
+				boolean bDied = B.energy <= 0;
 				//determine if move was valid
-				if (aMove && crits.containsKey(hashCoords(A.x_coord,A.y_coord))){	//if space is already occupied, move back to conflict space
+				if (aMoved && crits.containsKey(hashCoords(A.x_coord,A.y_coord))){	//if space is already occupied, move back to conflict space
 					A.x_coord = origx;
 					A.y_coord = origy;
-					aMove = false;
+					aMoved = false;
 				}
-				if (bMove && crits.containsKey(hashCoords(B.x_coord,B.y_coord))){	//if space is already occupied, move back to conflict space
+				if (bMoved && crits.containsKey(hashCoords(B.x_coord,B.y_coord))){	//if space is already occupied, move back to conflict space
 					B.x_coord = origx;
 					B.y_coord = origy;
-					bMove = false;
+					bMoved = false;
 				}
-				if(!(aMove||aDie||bMove||bDie)) {
-					int aRoll = A.rollFight(aFlag);        //if we are still fighting, roll
-					int bRoll = B.rollFight(bFlag);
-					if (aRoll >= bRoll) {    //A wins tiebreaker
+				if(!(aMoved||aDied||bMoved||bDied)) {
+					int aRoll = aFlag ? getRandomInt(A.getEnergy()+1) : 0;       //if we are still fighting, roll
+					int bRoll = bFlag ? getRandomInt(B.getEnergy()+1) : 0;
+                    if (aRoll >= bRoll) {    //A wins tiebreaker
 						A.energy += B.energy / 2;
 						B.energy = 0;
-						bDie = true;
+						bDied = true;
 					} else {
 						B.energy += A.energy / 2;
 						A.energy = 0;
-						aDie = true;
+						aDied = true;
 					}
 				}
-				if(!aDie) {
+				if(!aDied)
 					updateHash(A,crits);
-				}
-				if(!bDie){
+				if(!bDied)
 					updateHash(B,crits);
-				}
 			}
 		}
 		// remove dead stuff
 		Iterator<Critter> it = population.iterator();
 		while (it.hasNext())
-			if (it.next().cull()) // removes rest cost
+			if ((it.next().energy -= Params.rest_energy_cost) > 0) // removes rest cost
 				it.remove();
 		// add new Algae
 		for(int i = 0; i<Params.refresh_algae_count; i++) {
