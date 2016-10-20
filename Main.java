@@ -11,6 +11,7 @@
  * Fall 2016
  */
 package assignment4; // cannot be in default package
+import java.util.List;
 import java.util.Scanner;
 import java.io.*;
 
@@ -68,8 +69,43 @@ public class Main {
 
         /* Do not alter the code above for your submission. */
         /* Write your code below. */
-        
-        System.out.println("GLHF");
+
+        String critterPackage = Critter.class.getPackage().toString().split(" ")[1];
+        while (true) {
+            System.out.print("critters>");
+            String input = kb.nextLine().trim();
+            try {
+                if (input.equals("quit"))
+                    break;
+                if (input.equals("show")) {
+                    Critter.displayWorld();
+                } else if (input.equals("step")) {
+                    Critter.worldTimeStep();
+                } else if (input.matches("^step\\s+\\d+$")) {
+                    int steps = Integer.parseInt(input.split("\\s+")[1]);
+                    for (int i = 0; i < steps; i++)
+                        Critter.worldTimeStep();
+                } else if (input.matches("^seed\\s+\\d+$")) {
+                    int seed = Integer.parseInt(input.split("\\s+")[1]);
+                    Critter.setSeed(seed);
+                } else if (input.matches("^make\\s+\\w+(\\s+\\d+)?$")) {
+                    String[] split = input.split("\\s+");
+                    int num = (split.length == 3) ? Integer.parseInt(split[2]) : 1;
+                    for (int i = 0; i < num; i++)
+                        Critter.makeCritter(split[1]);
+                } else if (input.matches("^stats\\s+\\w+")) {
+                    String className = input.split("\\s+")[1];
+                    Class.forName(critterPackage+"."+className)
+                            .getMethod("runStats", List.class)
+                            .invoke(null, Critter.getInstances(className));
+                } else {
+                    System.out.println("invalid command: "+input);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("error processing: "+input);
+            }
+        }
         
         /* Write your code above */
         System.out.flush();
