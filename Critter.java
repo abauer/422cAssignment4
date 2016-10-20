@@ -136,7 +136,7 @@ public abstract class Critter {
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
 		try {
-			Critter c = (Critter)Class.forName(critter_class_name).newInstance();
+			Critter c = (Critter)Class.forName(myPackage+"."+critter_class_name).newInstance();
 			c.energy = Params.start_energy;
 			c.x_coord = getRandomInt(Params.world_width);
 			c.y_coord = getRandomInt(Params.world_height);
@@ -154,7 +154,7 @@ public abstract class Critter {
 	 */
 	public static List<Critter> getInstances(String critter_class_name) throws InvalidCritterException {
 		try {
-			Class c = Class.forName(critter_class_name);
+			Class c = Class.forName(myPackage+"."+critter_class_name);
 			return population.stream().filter(c::isInstance).collect(Collectors.toList());
 		} catch(Exception e) {
 			throw new InvalidCritterException("Could not find Critter of type "+critter_class_name);
