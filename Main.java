@@ -102,7 +102,6 @@ public class Main {
                     System.out.println("invalid command: "+input);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 System.out.println("error processing: "+input);
             }
         }
