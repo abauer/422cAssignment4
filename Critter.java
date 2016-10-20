@@ -242,10 +242,9 @@ public abstract class Critter {
 	public static void worldTimeStep() {
 		// do time step
 		population.forEach(c -> {
-					c.hasMoved = false;
-					c.doTimeStep();
-				}
-		);
+			c.hasMoved = false;
+			c.doTimeStep();
+		});
 		// pre-process locations
 		Set<Integer> locations = new HashSet<>();
 		HashMap<Integer,LinkedList<Critter>> crits = new HashMap<>();
