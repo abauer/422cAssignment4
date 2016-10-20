@@ -163,52 +163,63 @@ public abstract class Critter {
 		System.out.println();		
 	}
 	
-	/* the TestCritter class allows some critters to "cheat". If you want to 
+	/** the TestCritter class allows some critters to "cheat". If you want to
 	 * create tests of your Critter model, you can create subclasses of this class
 	 * and then use the setter functions contained here. 
-	 * 
-	 * NOTE: you must make sure that the setter functions work with your implementation
-	 * of Critter. That means, if you're recording the positions of your critters
-	 * using some sort of external grid or some other data structure in addition
-	 * to the x_coord and y_coord functions, then you MUST update these setter functions
-	 * so that they correctly update your grid/data structure.
+	 *
 	 */
 	static abstract class TestCritter extends Critter {
+		/**
+		 * This method sets the energy of the Critter
+		 * @param new_energy_value new energy value
+		 */
 		protected void setEnergy(int new_energy_value) {
 			super.energy = new_energy_value;
 		}
-		
+
+		/**
+		 * This method sets the X coordinate of the Critter
+		 * @param new_x_coord new x coordinate
+		 */
 		protected void setX_coord(int new_x_coord) {
 			super.x_coord = new_x_coord;
 		}
-		
+
+		/**
+		 * Sets the Y coordinate of the Critter
+		 * @param new_y_coord new y coordinate
+		 */
 		protected void setY_coord(int new_y_coord) {
 			super.y_coord = new_y_coord;
 		}
-		
+
+		/**
+		 * Returns the X coordinate
+		 * @return current x value of Critter
+		 */
 		protected int getX_coord() {
 			return super.x_coord;
 		}
-		
+
+		/**
+		 * Returns the Y coordinate
+		 * @return current y value of Critter
+		 */
 		protected int getY_coord() {
 			return super.y_coord;
 		}
-		
 
-		/*
-		 * This method getPopulation has to be modified by you if you are not using the population
-		 * ArrayList that has been provided in the starter code.  In any case, it has to be
-		 * implemented for grading tests to work.
+		/**
+		 * Returns the list of existing Critters
+		 * @return the Critters alive at the start of this world time step
 		 */
 		protected static List<Critter> getPopulation() {
 			return population;
 		}
 		
-		/*
-		 * This method getBabies has to be modified by you if you are not using the babies
-		 * ArrayList that has been provided in the starter code.  In any case, it has to be
-		 * implemented for grading tests to work.  Babies should be added to the general population 
-		 * at either the beginning OR the end of every timestep.
+		/**
+		 * Returns the newly created Critters
+		 * @return the offspring created during this world time step
 		 */
 		protected static List<Critter> getBabies() {
 			return babies;
@@ -223,22 +234,46 @@ public abstract class Critter {
 		babies = new ArrayList<>();
 	}
 
+	/**
+	 * Create a one to one hash given the X and Y coordinates
+	 * @param x the x coordinate to hash
+	 * @param y the y coordinate to hash
+	 * @return the hashcode generated from x and y
+	 */
 	private static int hashCoords(int x, int y) {
 		int w = Params.world_width;
 		int h = Params.world_height;
 		return (w>h) ? x+y*w : y+x*h;
 	}
+
+	/**
+	 * Get the X value from the hashcode
+	 * @param hash the hashcode containing the X value
+	 * @return the X value hashed in the hashcode
+	 */
 	private static int unhashX(int hash) {
 		int w = Params.world_width;
 		int h = Params.world_height;
 		return (w>h) ? hash%w : hash/h;
 	}
+
+	/**
+	 * Get the Y value from the hashcode
+	 * @param hash the hashcode containing the Y value
+	 * @return the Y value hashed in the hashcode
+	 */
 	private static int unhashY(int hash) {
 		int w = Params.world_width;
 		int h = Params.world_height;
 		return (w>h) ? hash/w : hash%h;
 	}
 
+	/**
+	 * This method calculates the hash for Critter c and adds it to the ArrayList in the HashMap hash
+	 * If no ArrayList exists at the hash a new one will be created
+	 * @param c the Critter to add to the HashMap
+	 * @param hash the HashMap the Critter should be added to
+	 */
 	private static void updateHash(Critter c, HashMap<Integer,LinkedList<Critter>> hash){
 		int aHash = hashCoords(c.x_coord, c.y_coord);
 		if (!hash.containsKey(aHash))
@@ -246,6 +281,14 @@ public abstract class Critter {
 		hash.get(aHash).add(c);
 	}
 
+	/**
+	 * This method performs the timestep for each Critter as follows
+	 * Allow each Critter to perform individual timestep
+	 * Determine locations of multiple Critters (where conflicts happen)
+	 * Resolve conflicts such that each Critter can run before the fight, removing the loser
+	 * Remove all Critters that are dead from world
+	 * Add new Algae and babies to world
+	 */
 	public static void worldTimeStep() {
 		// do time step
 		population.forEach(c -> {
@@ -334,7 +377,11 @@ public abstract class Critter {
 		population.addAll(babies);
 		babies.clear();
 	}
-	
+
+	/**
+	 * This method prints the world borders and Critters in the world to the screen
+	 * Typical use case is to be called from show command.
+	 */
 	public static void displayWorld() {
 		// create +---+
 		String border = "+"
