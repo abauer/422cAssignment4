@@ -6,7 +6,7 @@ package assignment4;
 public class CowardCritter extends Critter {
 
     @Override
-    public String toString() { return "\u00A9"; }
+    public String toString() { return "&"; }
 
     private int dir;
 
@@ -23,7 +23,7 @@ public class CowardCritter extends Critter {
     public void doTimeStep() {
 		/* take one step forward */
         walk(dir);
-        if (getEnergy() > 150) {
+        if (getEnergy() > Params.start_energy+1) {
             reproduce(new CowardCritter(), Critter.getRandomInt(8));
         }
     }
