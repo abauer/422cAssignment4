@@ -23,7 +23,7 @@ public class CowardCritter extends Critter {
     public void doTimeStep() {
 		/* take one step forward */
         walk(dir);
-        if (getEnergy() > 150) {
+        if (getEnergy() > Params.start_energy+1) {
             reproduce(new CowardCritter(), Critter.getRandomInt(8));
         }
     }

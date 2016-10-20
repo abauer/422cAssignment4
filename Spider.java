@@ -20,7 +20,7 @@ public class Spider extends Critter {
     public void doTimeStep() {
 		/* take one step forward */
         walk(dir);
-        if (getEnergy() > 150) {
+        if (getEnergy() > Params.start_energy+1) {
             reproduce(new Spider(), Critter.getRandomInt(8));
             reproduce(new Spider(), Critter.getRandomInt(8));
             while(getEnergy()>0)
