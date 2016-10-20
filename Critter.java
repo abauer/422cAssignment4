@@ -112,28 +112,6 @@ public abstract class Critter {
 	 * @param critter_class_name
 	 * @throws InvalidCritterException
 	 */
-	public static Critter makeNewCritter(String critter_class_name) throws InvalidCritterException {
-		try {
-			Critter c = (Critter)Class.forName(critter_class_name).newInstance();
-			c.energy = Params.start_energy;
-			c.x_coord = getRandomInt(Params.world_width);
-			c.y_coord = getRandomInt(Params.world_height);
-			return c;
-		} catch(Exception e) {
-			throw new InvalidCritterException("Could not find Critter of type "+critter_class_name);
-		}
-	}
-
-	/**
-	 * create and initialize a Critter subclass.
-	 * critter_class_name must be the unqualified name of a concrete subclass of Critter, if not,
-	 * an InvalidCritterException must be thrown.
-	 * (Java weirdness: Exception throwing does not work properly if the parameter has lower-case instead of
-	 * upper. For example, if craig is supplied instead of Craig, an error is thrown instead of
-	 * an Exception.)
-	 * @param critter_class_name
-	 * @throws InvalidCritterException
-	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
 		try {
 			Critter c = (Critter)Class.forName(myPackage+"."+critter_class_name).newInstance();
@@ -311,45 +289,31 @@ public abstract class Critter {
 				if (aMove && crits.containsKey(hashCoords(A.x_coord,A.y_coord))){	//if space is already occupied, move back to conflict space
 					A.x_coord = origx;
 					A.y_coord = origy;
-					aMove = !aMove;
+					aMove = false;
 				}
 				if (bMove && crits.containsKey(hashCoords(B.x_coord,B.y_coord))){	//if space is already occupied, move back to conflict space
 					B.x_coord = origx;
 					B.y_coord = origy;
-					bMove = !bMove;
+					bMove = false;
 				}
-				// handle moves or deaths
-				if ((aMove||aDie) && (bMove||bDie)) {	//both A and B moved or died
-					if(!aDie){
-						updateHash(A,crits);
+				if(!(aMove||aDie||bMove||bDie)) {
+					int aRoll = A.rollFight(aFlag);        //if we are still fighting, roll
+					int bRoll = B.rollFight(bFlag);
+					if (aRoll >= bRoll) {    //A wins tiebreaker
+						A.energy += B.energy / 2;
+						B.energy = 0;
+						bDie = true;
+					} else {
+						B.energy += A.energy / 2;
+						A.energy = 0;
+						aDie = true;
 					}
-					if(!bDie){
-						updateHash(B,crits);
-					}
-					continue;
-				} else if (aMove || aDie) {	//A moved or died and B is still there
-					result.addFirst(B);
-					if(!aDie){
-						updateHash(A,crits);
-					}
-					continue;
-				} else if (bMove || bDie) {	//B moved or died and A is still there
-					result.addFirst(A);
-					if(!bDie){
-						updateHash(B,crits);
-					}
-					continue;
 				}
-				int aRoll = A.rollFight(aFlag);		//if we are still fighting, roll
-				int bRoll = B.rollFight(bFlag);
-				if (aRoll >= bRoll) {	//A wins tiebreaker
-					A.energy += B.energy/2;
-					B.energy=0;
-					result.addFirst(A);
-				} else {
-					B.energy += A.energy/2;
-					A.energy=0;
-					result.addFirst(B);
+				if(!aDie) {
+					updateHash(A,crits);
+				}
+				if(!bDie){
+					updateHash(B,crits);
 				}
 			}
 		}
