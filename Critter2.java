@@ -1,4 +1,4 @@
-/* CRITTERS Spider.java
+/* CRITTERS Critter2.java
  * EE422C Project 4 submission by
  * Anthony Bauer
  * amb6869
@@ -13,18 +13,18 @@
 package assignment4;
 
 /**
- * Spider Critter
- * The Spider Critter will never move backwards
- * Upon reproducing the Spider produces two offspring and then kills itself
+ * Critter2 Critter
+ * The Critter2 Critter will never move backwards
+ * Upon reproducing the Critter2 produces two offspring and then kills itself
  */
-public class Spider extends Critter {
+public class Critter2 extends Critter {
 
     @Override
-    public String toString() { return "S"; }
+    public String toString() { return "2"; }
 
     private int dir;
 
-    public Spider() {
+    public Critter2() {
         dir = Critter.getRandomInt(4);
     }
 
@@ -39,8 +39,8 @@ public class Spider extends Critter {
         walk(dir);
         dir = Critter.getRandomInt(4);
         if (getEnergy() > Params.start_energy+1) {
-            reproduce(new Spider(), Critter.getRandomInt(8));
-            reproduce(new Spider(), Critter.getRandomInt(8));
+            reproduce(new Critter2(), Critter.getRandomInt(8));
+            reproduce(new Critter2(), Critter.getRandomInt(8));
             while(getEnergy()>0)
                 walk(dir);
         }

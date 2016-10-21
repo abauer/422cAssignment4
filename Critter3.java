@@ -1,4 +1,4 @@
-/* CRITTERS NinjaCritter.java
+/* CRITTERS Critter3.java
  * EE422C Project 4 submission by
  * Anthony Bauer
  * amb6869
@@ -12,15 +12,15 @@
 
 package assignment4;
 
-/*
+/**
  * NinjaCritters are special because they don't show up on the map; their String representation is a space.
  * However, NinjaCritters will always fight when encountered.
  * Because ninjas are always trying to climb the social ladder, NinjaCritters only move in upward directions.
  */
-public class NinjaCritter extends Critter {
+public class Critter3 extends Critter {
     @Override
     public String toString() {
-        return " ";
+        return "3"; //intended to be a " " (space
     }
 
     public boolean fight(String not_used) {
@@ -34,6 +34,6 @@ public class NinjaCritter extends Critter {
             walk(Critter.getRandomInt(3)+1);
         // generally doesn't reproduce unless it has a surplus of energy
         if (getEnergy() > Params.start_energy)
-            reproduce(new NinjaCritter(), 6);
+            reproduce(new Critter3(), 6);
     }
 }

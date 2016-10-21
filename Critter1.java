@@ -1,4 +1,4 @@
-/* CRITTERS CowardCritter.java
+/* CRITTERS Critter1.java
  * EE422C Project 4 submission by
  * Anthony Bauer
  * amb6869
@@ -13,23 +13,23 @@
 package assignment4;
 
 /**
- * CowardCritter
- * The CowardCritter will always move foward
- * Upon entering a fight the CowardCritter will preserve half its energy in the form of an offspring
+ * Critter1
+ * The Critter1 will always move forward
+ * Upon entering a fight the Critter1 will preserve half its energy in the form of an offspring
  */
-public class CowardCritter extends Critter {
+public class Critter1 extends Critter {
 
     @Override
-    public String toString() { return "&"; }
+    public String toString() { return "1"; }
 
     private int dir;
 
-    public CowardCritter() {
+    public Critter1() {
         dir = Critter.getRandomInt(8);
     }
 
     public boolean fight(String not_used) {
-        reproduce(new CowardCritter(), Critter.getRandomInt(8));
+        reproduce(new Critter1(), Critter.getRandomInt(8));
         return true;
     }
 
@@ -37,7 +37,7 @@ public class CowardCritter extends Critter {
     public void doTimeStep() {
         walk(dir);
         if (getEnergy() > Params.start_energy+1) {
-            reproduce(new CowardCritter(), Critter.getRandomInt(8));
+            reproduce(new Critter1(), Critter.getRandomInt(8));
         }
     }
 }
