@@ -385,9 +385,12 @@ public abstract class Critter {
 		}
 		// remove dead stuff
 		Iterator<Critter> it = population.iterator();
-		while (it.hasNext())
-			if ((it.next().energy -= Params.rest_energy_cost) > 0) // removes rest cost
+		while (it.hasNext()) {
+			Critter c = it.next();
+			c.energy-=Params.rest_energy_cost;
+			if (c.energy <= 0)
 				it.remove();
+		}
 		// add new Algae
 		for(int i = 0; i<Params.refresh_algae_count; i++) {
 			try{

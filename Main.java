@@ -92,9 +92,11 @@ public class Main {
     private static boolean runCommand(String input) {
         String[] tokens = input.split("\\s+");
         try {
-            if (tokens[0].equals("show")) {
+            if (tokens[0].equals("quit")){
+                throw new IllegalArgumentException();
+            } else if (tokens[0].equals("show")) {
                 if (tokens.length > 1)
-                    return false;
+                    throw new IllegalArgumentException();
                 Critter.displayWorld();
             } else if (tokens[0].equals("step")) {
                 if (tokens.length == 1) {
@@ -104,11 +106,11 @@ public class Main {
                     for (int i = 0; i < steps; i++)
                         Critter.worldTimeStep();
                 } else {
-                    return false;
+                    throw new IllegalArgumentException();
                 }
             } else if (tokens[0].equals("seed")) {
                 if (tokens.length != 2)
-                    return false;
+                    throw new IllegalArgumentException();
                 int seed = Integer.parseInt(tokens[1]);
                 Critter.setSeed(seed);
             } else if (tokens[0].equals("make")) {
@@ -119,20 +121,20 @@ public class Main {
                     for (int i = 0; i < num; i++)
                         Critter.makeCritter(tokens[1]);
                 } else {
-                    return false;
+                    throw new IllegalArgumentException();
                 }
             } else if (tokens[0].equals("stats")) {
                 if (tokens.length != 2)
-                    return false;
+                    throw new IllegalArgumentException();
                 String critterPackage = Critter.class.getPackage().toString().split(" ")[1];
                 Class.forName(critterPackage + "." + tokens[1])
                         .getMethod("runStats", List.class)
                         .invoke(null, Critter.getInstances(tokens[1]));
             } else {
-                return false;
+                return false;   //not a valid command
             }
         } catch (Exception e) {
-            System.out.println("error processing: "+tokens[0]);
+            System.out.println("error processing: "+input);
         }
         return true;
     }
