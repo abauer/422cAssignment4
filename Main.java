@@ -69,44 +69,71 @@ public class Main {
         /* Do not alter the code above for your submission. */
         /* Write your code below. */
 
-        String critterPackage = Critter.class.getPackage().toString().split(" ")[1];
         while (true) {
             System.out.print("critters>");
             String input = kb.nextLine().trim();
-            try {
-                if (input.equals("quit"))
-                    break;
-                if (input.equals("show")) {
-                    Critter.displayWorld();
-                } else if (input.equals("step")) {
-                    Critter.worldTimeStep();
-                } else if (input.matches("^step\\s+\\d+$")) {
-                    int steps = Integer.parseInt(input.split("\\s+")[1]);
-                    for (int i = 0; i < steps; i++)
-                        Critter.worldTimeStep();
-                } else if (input.matches("^seed\\s+\\d+$")) {
-                    int seed = Integer.parseInt(input.split("\\s+")[1]);
-                    Critter.setSeed(seed);
-                } else if (input.matches("^make\\s+\\w+(\\s+\\d+)?$")) {
-                    String[] split = input.split("\\s+");
-                    int num = (split.length == 3) ? Integer.parseInt(split[2]) : 1;
-                    for (int i = 0; i < num; i++)
-                        Critter.makeCritter(split[1]);
-                } else if (input.matches("^stats\\s+\\w+")) {
-                    String className = input.split("\\s+")[1];
-                    Class.forName(critterPackage+"."+className)
-                            .getMethod("runStats", List.class)
-                            .invoke(null, Critter.getInstances(className));
-                } else {
-                    System.out.println("invalid command: "+input);
-                }
-            } catch (Exception e) {
-                System.out.println("error processing: "+input);
-            }
+            // special-cased since we can't use System.exit()
+            if (input.equals("quit"))
+                break;
+            if (!runCommand(input))
+                System.out.println("invalid command: "+input);
         }
         
         /* Write your code above */
         System.out.flush();
 
+    }
+
+    /**
+     * Parses and runs an input command.
+     * @param input the trimmed raw input
+     * @return true if the command was a valid command (even if its parameters were invalid)
+     */
+    private static boolean runCommand(String input) {
+        String[] tokens = input.split("\\s+");
+        try {
+            if (tokens[0].equals("show")) {
+                if (tokens.length > 1)
+                    return false;
+                Critter.displayWorld();
+            } else if (tokens[0].equals("step")) {
+                if (tokens.length == 1) {
+                    Critter.worldTimeStep();
+                } else if (tokens.length == 2) {
+                    int steps = Integer.parseInt(tokens[1]);
+                    for (int i = 0; i < steps; i++)
+                        Critter.worldTimeStep();
+                } else {
+                    return false;
+                }
+            } else if (tokens[0].equals("seed")) {
+                if (tokens.length != 2)
+                    return false;
+                int seed = Integer.parseInt(tokens[1]);
+                Critter.setSeed(seed);
+            } else if (tokens[0].equals("make")) {
+                if (tokens.length == 2) {
+                    Critter.makeCritter(tokens[1]);
+                } else if (tokens.length == 3) {
+                    int num = Integer.parseInt(tokens[2]);
+                    for (int i = 0; i < num; i++)
+                        Critter.makeCritter(tokens[1]);
+                } else {
+                    return false;
+                }
+            } else if (tokens[0].equals("stats")) {
+                if (tokens.length != 2)
+                    return false;
+                String critterPackage = Critter.class.getPackage().toString().split(" ")[1];
+                Class.forName(critterPackage + "." + tokens[1])
+                        .getMethod("runStats", List.class)
+                        .invoke(null, Critter.getInstances(tokens[1]));
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("error processing: "+tokens[0]);
+        }
+        return true;
     }
 }
