@@ -4,6 +4,11 @@ import java.util.*;
 
 public class MyCritter1 extends Critter.TestCritter {
 
+	public MyCritter1(){
+		super();
+		System.out.println("CreateMyCritter1");
+	}
+
 	@Override
 	public void doTimeStep() {
 		walk(0);

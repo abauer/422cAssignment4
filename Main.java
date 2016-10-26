@@ -10,6 +10,13 @@
  * Fall 2016
  */
 package assignment4; // cannot be in default package
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+
 import java.util.List;
 import java.util.Scanner;
 import java.io.*;
@@ -20,7 +27,7 @@ import java.io.*;
  * input file is optional.  If input file is specified, the word 'test' is optional.
  * May not use 'test' argument without specifying input file.
  */
-public class Main {
+public class Main extends Application{
 
     static Scanner kb;	// scanner connected to keyboard input, or input file
     private static String inputFile;	// input file, used instead of keyboard input if specified
@@ -40,7 +47,10 @@ public class Main {
      * @param args args can be empty.  If not empty, provide two parameters -- the first is a file name, 
      * and the second is test (for test output, where all output to be directed to a String), or nothing.
      */
-    public static void main(String[] args) { 
+    public static void main(String[] args) {
+        launch(args);
+        System.out.println("failfish");
+
         if (args.length != 0) {
             try {
                 inputFile = args[0];
@@ -137,5 +147,13 @@ public class Main {
             System.out.println("error processing: "+input);
         }
         return true;
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        primaryStage.setTitle("Critters");
+        Scene scene = new Scene(new AddMenu().g, 500, 375);
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 }
