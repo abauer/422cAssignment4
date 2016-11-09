@@ -21,13 +21,13 @@ import static org.hamcrest.CoreMatchers.containsString;
 
 public class A4SampleTest{
 
-	private static String TESTSRCDIR = "test_sample/";
+	private static String TESTSRCDIR = "src/test/data/cli_integration_inouts/";
 	private static  ByteArrayOutputStream outContent;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 	}
-	
+
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 	}
@@ -52,7 +52,7 @@ public class A4SampleTest{
      * Expects all Critters to be dead
      */
 	 
-	@Test 
+	@Test(timeout=1000) 
 	public void KillCritters(){
 	
 		
@@ -100,7 +100,7 @@ public class A4SampleTest{
      * Expects errors to be printed
 	 */
 	
-	@Test 
+	@Test(timeout=1000) 
 	public void ParseErrors(){
 		
 	
@@ -143,7 +143,7 @@ public class A4SampleTest{
 	 * 10. showEmptyWorld
 	 */
 	
-	@Test
+	@Test(timeout=1000)
 	public void showEmptyWorld(){
 		
 		/*
@@ -168,6 +168,7 @@ public class A4SampleTest{
 		outContent = Main.testOutputString;
 		
 		
+		
 		Scanner scanner = null;
 		try {
 			scanner = new Scanner( new File(TESTSRCDIR + fileFolder + "/expected_output.txt") );
@@ -184,11 +185,12 @@ public class A4SampleTest{
 		
 	}
 	
+
 	/*
 	 * 1. ParseMakeLargeCritter
 	 */
 	
-	@Test 
+	@Test(timeout=1000) 
 	public void ParseMakeLargeCritter(){
 		// Test for make and show command
 		// Expects entire board to be filled with critters
@@ -228,15 +230,12 @@ public class A4SampleTest{
 	
 	String cleanString(String input)
 	{
-		String lineSep = System.getProperty("line.separator");
 		input = input.replace("critter>", "")
 					 .replace("critters>", "")
-					 .replaceAll(lineSep + "\\s+","\n")
-					 .replaceAll(lineSep, "\n")
+			         .replace("\r\n", "\n")
 			         .trim();
-		return input;
 		
-	
+		return input;
 	}
 	
 	
